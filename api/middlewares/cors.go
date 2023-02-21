@@ -7,14 +7,14 @@ import (
 
 // CorsMiddleware middleware for cors
 type CorsMiddleware struct {
-	handler lib.RequestHandler
-	logger  lib.Logger
-	env     lib.Env
+	handler *lib.RequestHandler
+	logger  *lib.Logger
+	env     *lib.Env
 }
 
 // NewCorsMiddleware creates new cors middleware
-func NewCorsMiddleware(handler lib.RequestHandler, logger lib.Logger, env lib.Env) CorsMiddleware {
-	return CorsMiddleware{
+func NewCorsMiddleware(handler *lib.RequestHandler, logger *lib.Logger, env *lib.Env) *CorsMiddleware {
+	return &CorsMiddleware{
 		handler: handler,
 		logger:  logger,
 		env:     env,

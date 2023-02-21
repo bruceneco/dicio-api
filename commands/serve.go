@@ -14,15 +14,15 @@ func (s *ServeCommand) Short() string {
 	return "serve application"
 }
 
-func (s *ServeCommand) Setup(cmd *cobra.Command) {}
+func (s *ServeCommand) Setup(_ *cobra.Command) {}
 
 func (s *ServeCommand) Run() lib.CommandRunner {
 	return func(
-		middleware middlewares.Middlewares,
-		env lib.Env,
-		router lib.RequestHandler,
-		route routes.Routes,
-		logger lib.Logger,
+		middleware *middlewares.Middlewares,
+		env *lib.Env,
+		router *lib.RequestHandler,
+		route *routes.Routes,
+		logger *lib.Logger,
 	) {
 		middleware.Setup()
 		route.Setup()

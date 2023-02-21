@@ -16,7 +16,7 @@ type Env struct {
 }
 
 // NewEnv creates a new environment
-func NewEnv() Env {
+func NewEnv() *Env {
 
 	env := Env{}
 	viper.SetConfigFile(".env")
@@ -31,5 +31,5 @@ func NewEnv() Env {
 		log.Fatal("☠️ environment can't be loaded: ", err)
 	}
 
-	return env
+	return &env
 }

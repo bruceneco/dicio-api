@@ -6,6 +6,6 @@ type Scrap struct {
 	*colly.Collector
 }
 
-func NewScrap() Scrap {
-	return Scrap{Collector: colly.NewCollector()}
+func NewScrap() *Scrap {
+	return &Scrap{Collector: colly.NewCollector()}
 }
