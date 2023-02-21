@@ -2,10 +2,12 @@ package lib
 
 import "github.com/gocolly/colly"
 
-type Scrap struct {
-	*colly.Collector
-}
+type Scrap struct{}
 
 func NewScrap() *Scrap {
-	return &Scrap{Collector: colly.NewCollector()}
+	return &Scrap{}
+}
+
+func (s *Scrap) GetColl() *colly.Collector {
+	return colly.NewCollector(colly.AllowURLRevisit())
 }
