@@ -5,6 +5,7 @@ import (
 	"github.com/bruceneco/dicio-api/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type WordController struct {
@@ -16,7 +17,17 @@ func NewWordController(scrap *services.ScrapService) *WordController {
 }
 
 func (wc *WordController) GetTopWords(c *gin.Context) {
-	words, err := wc.scrap.TopWords()
+	nWords := 200
+	queryNWords, exist := c.GetQuery("nWords")
+	if exist {
+		var err error
+		nWords, err = strconv.Atoi(queryNWords)
+		if err != nil {
+			utils.NewError(c, http.StatusBadRequest, "Não foi possível ler a quantidade de palavras desejada.")
+			return
+		}
+	}
+	words, err := wc.scrap.TopWords(nWords)
 	if err != nil {
 		utils.NewError(c, http.StatusBadRequest, err.Error())
 		return

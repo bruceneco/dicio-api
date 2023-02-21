@@ -16,6 +16,6 @@ func NewScrapService(logger *lib.Logger, scrap *lib.Scrap) *ScrapService {
 	}
 }
 
-func (s ScrapService) TopWords() ([]string, error) {
+func (s ScrapService) TopWords(nWords int) ([]string, error) {
 	return []string{"Gato", "Cachorro"}, nil
 }
