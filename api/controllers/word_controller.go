@@ -34,3 +34,13 @@ func (wc *WordController) GetTopWords(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, words)
 }
+
+func (wc *WordController) GetMeanings(c *gin.Context) {
+	word := c.Param("word")
+	meanings, err := wc.scrap.Meanings(word)
+	if err != nil {
+		utils.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"meanings": meanings})
+}

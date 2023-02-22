@@ -17,6 +17,7 @@ func (pr *WordRoutes) Setup() {
 	api := pr.handler.Gin.Group("/word")
 	{
 		api.GET("/top-words", pr.wordController.GetTopWords)
+		api.GET("/meanings/:word", pr.wordController.GetMeanings)
 	}
 }
 
