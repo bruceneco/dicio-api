@@ -33,7 +33,10 @@ func (wc *WordController) GetTopWords(c *gin.Context) {
 		utils.NewError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, words)
+	c.JSON(http.StatusOK, gin.H{
+		"topWords":   words,
+		"wordsCount": len(words),
+	})
 }
 
 func (wc *WordController) GetMeanings(c *gin.Context) {
