@@ -10,8 +10,8 @@ type RequestHandler struct {
 }
 
 // NewRequestHandler creates a new request handler
-func NewRequestHandler(logger Logger) RequestHandler {
+func NewRequestHandler(logger *Logger) *RequestHandler {
 	gin.DefaultWriter = logger.GetGinLogger()
 	engine := gin.New()
-	return RequestHandler{Gin: engine}
+	return &RequestHandler{Gin: engine}
 }

@@ -2,4 +2,6 @@ package controllers
 
 import "go.uber.org/fx"
 
-var Module = fx.Options(fx.Provide(NewPingController))
+var Module = fx.Options(
+	fx.Provide(NewWordController),
+)

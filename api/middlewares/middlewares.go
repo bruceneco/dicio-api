@@ -18,8 +18,8 @@ type Middlewares []IMiddleware
 
 // NewMiddlewares creates new middlewares
 // Register the middleware that should be applied directly (globally)
-func NewMiddlewares(corsMiddleware CorsMiddleware) Middlewares {
-	return Middlewares{
+func NewMiddlewares(corsMiddleware *CorsMiddleware) *Middlewares {
+	return &Middlewares{
 		corsMiddleware,
 	}
 }

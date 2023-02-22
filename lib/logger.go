@@ -25,16 +25,16 @@ var (
 )
 
 // GetLogger get the logger
-func GetLogger() Logger {
+func GetLogger() *Logger {
 	if globalLogger == nil {
 		logger := newLogger(NewEnv())
-		globalLogger = &logger
+		globalLogger = logger
 	}
-	return *globalLogger
+	return globalLogger
 }
 
 // GetGinLogger get the gin logger
-func (l Logger) GetGinLogger() GinLogger {
+func (l *Logger) GetGinLogger() GinLogger {
 	logger := zapLogger.WithOptions(
 		zap.WithCaller(false),
 	)
@@ -125,7 +125,7 @@ func newSugaredLogger(logger *zap.Logger) *Logger {
 }
 
 // newLogger sets up logger
-func newLogger(env Env) Logger {
+func newLogger(env *Env) *Logger {
 
 	config := zap.NewDevelopmentConfig()
 	logOutput := env.LogOutput
@@ -158,7 +158,7 @@ func newLogger(env Env) Logger {
 
 	zapLogger, _ = config.Build()
 	logger := newSugaredLogger(zapLogger)
-	return *logger
+	return logger
 }
 
 // Write interface implementation for gin-framework
