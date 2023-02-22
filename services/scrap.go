@@ -14,8 +14,9 @@ const (
 )
 
 type ScrapService struct {
-	logger *lib.Logger
-	scrap  *lib.Scrap
+	logger        *lib.Logger
+	scrap         *lib.Scrap
+	textTransform *lib.TextTransform
 }
 
 func NewScrapService(logger *lib.Logger, scrap *lib.Scrap) *ScrapService {
@@ -38,7 +39,7 @@ func (s *ScrapService) TopWords(nWords int) ([]string, error) {
 	for i := 0.; i < math.Ceil(float64(nWords)/100.); i++ {
 		err := c.Visit(fmt.Sprintf("%s/palavras-mais-buscadas/%g", dicioURL, i))
 		if err != nil {
-			s.logger.Errorf("can't access dicio site: %s", err.Error())
+			s.logger.Warnf("can't access dicio site: %s", err.Error())
 			return nil, fmt.Errorf("Não foi possível acessar o site do Dicio.")
 		}
 	}
@@ -46,6 +47,11 @@ func (s *ScrapService) TopWords(nWords int) ([]string, error) {
 }
 
 func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+	}
 	var meanings []*models.Meaning
 
 	c := s.scrap.GetColl()
@@ -66,9 +72,9 @@ func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
 		meanings = append(meanings, &meaning)
 	})
 
-	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
 	if err != nil {
-		s.logger.Errorf("can't access word meaning page: %s", err.Error())
+		s.logger.Warnf("can't access word meaning page: %s", err.Error())
 		return nil, fmt.Errorf("Não foi possível acessar o significado da palavra desejada no Dicio.")
 	}
 
