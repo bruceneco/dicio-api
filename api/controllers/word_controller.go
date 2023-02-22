@@ -32,5 +32,5 @@ func (wc *WordController) GetTopWords(c *gin.Context) {
 		utils.NewError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(200, words)
+	c.JSON(http.StatusOK, words)
 }
