@@ -120,3 +120,30 @@ func (s *ScrapService) Etymology(word string) (string, error) {
 	}
 	return etym, nil
 }
+
+func (s *ScrapService) Definition(word string) (*models.Definition, error) {
+	c := s.scrap.GetColl()
+	def := models.Definition{}
+	c.OnHTML(".adicional", func(element *colly.HTMLElement) {
+		txt := element.Text
+		grammClass, err := s.textTransform.GetFromSubstrUntilTheEOL(txt, "Classe gramatical: ")
+		if err == nil {
+			def.GrammClass = grammClass
+		}
+		syllabicSep, err := s.textTransform.GetFromSubstrUntilTheEOL(txt, "Separação silábica: ")
+		if err == nil {
+			def.SyllabicSep = strings.Split(syllabicSep, "-")
+		}
+		plural, err := s.textTransform.GetFromSubstrUntilTheEOL(txt, "Plural: ")
+		if err == nil {
+			def.Plural = plural
+		}
+	})
+
+	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		return nil, fmt.Errorf("Não foi possível buscar a definição de %s.", word)
+	}
+
+	return &def, nil
+}

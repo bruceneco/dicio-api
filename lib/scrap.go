@@ -1,6 +1,8 @@
 package lib
 
-import "github.com/gocolly/colly"
+import (
+	"github.com/gocolly/colly"
+)
 
 type Scrap struct{}
 

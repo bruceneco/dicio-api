@@ -20,6 +20,7 @@ func (pr *WordRoutes) Setup() {
 		api.GET("/meanings/:word", pr.wordController.GetMeanings)
 		api.GET("/synonyms/:word", pr.wordController.GetSynonyms)
 		api.GET("/etymology/:word", pr.wordController.GetEtymology)
+		api.GET("/definition/:word", pr.wordController.GetDefinition)
 	}
 }
 

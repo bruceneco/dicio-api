@@ -74,3 +74,16 @@ func (wc *WordController) GetEtymology(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"etymology": etym})
 }
+
+func (wc *WordController) GetDefinition(c *gin.Context) {
+	word := c.Param("word")
+	def, err := wc.scrap.Definition(word)
+	if err != nil {
+		utils.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	} else if def == nil {
+		utils.NewError(c, http.StatusNotFound, fmt.Sprintf("Não foi possível encontrar a definição de %s.", word))
+		return
+	}
+	c.JSON(http.StatusOK, def)
+}
