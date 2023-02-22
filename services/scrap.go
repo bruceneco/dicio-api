@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"github.com/bruceneco/dicio-api/lib"
+	"github.com/bruceneco/dicio-api/models"
 	"github.com/gocolly/colly"
 	"math"
 	"strings"
@@ -42,4 +43,34 @@ func (s *ScrapService) TopWords(nWords int) ([]string, error) {
 		}
 	}
 	return words, nil
+}
+
+func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
+	var meanings []*models.Meaning
+
+	c := s.scrap.GetColl()
+	c.OnHTML(".significado > span:not(.cl):not(.etim)", func(element *colly.HTMLElement) {
+		meaning := models.Meaning{}
+		kindMeanSplit := strings.SplitAfter(element.Text, "]")
+		if len(kindMeanSplit) == 2 {
+			meaning.Type = kindMeanSplit[0]
+			meaning.Type = strings.TrimLeft(meaning.Type, "[")
+			meaning.Type = strings.TrimRight(meaning.Type, "]")
+			meaning.Type = strings.TrimSpace(meaning.Type)
+			meaning.Meaning = kindMeanSplit[1]
+		} else {
+			meaning.Meaning = kindMeanSplit[0]
+			meaning.Type = "Comum"
+		}
+		meaning.Meaning = strings.TrimSpace(meaning.Meaning)
+		meanings = append(meanings, &meaning)
+	})
+
+	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Errorf("can't access word meaning page: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível acessar o significado da palavra desejada no Dicio.")
+	}
+
+	return meanings, nil
 }
