@@ -102,7 +102,21 @@ func (s *ScrapService) Synonyms(word string) ([]string, error) {
 	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
 	if err != nil {
 		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
-		return nil, fmt.Errorf("Não foi possível encontrar a palavra no Dicio.")
+		return nil, fmt.Errorf("não foi possível encontrar sinônimos de %s.", word)
 	}
 	return syns, nil
+}
+
+func (s *ScrapService) Etymology(word string) (string, error) {
+	c := s.scrap.GetColl()
+	etym := ""
+	c.OnHTML(".significado > .etim", func(element *colly.HTMLElement) {
+		etym = strings.Split(element.Text, "). ")[1]
+	})
+
+	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		return "", fmt.Errorf("Não foi possível buscar a etimologia de %s.", word)
+	}
+	return etym, nil
 }
