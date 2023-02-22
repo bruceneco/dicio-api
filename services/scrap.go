@@ -80,3 +80,29 @@ func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
 
 	return meanings, nil
 }
+
+func (s *ScrapService) Synonyms(word string) ([]string, error) {
+	c := s.scrap.GetColl()
+	syns := []string{}
+	c.OnHTML(".sinonimos", func(e *colly.HTMLElement) {
+		if !strings.Contains(e.Text, "sinônimo") {
+			return
+		}
+		synsSepByComma := strings.Split(e.Text, ":")
+		if len(synsSepByComma) < 2 {
+			return
+		}
+		for _, syn := range strings.Split(synsSepByComma[1], ", ") {
+			syn := strings.Replace(syn, "\\n", "", -1)
+			syn = strings.TrimSpace(syn)
+			syns = append(syns, syn)
+		}
+	})
+
+	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
+		return nil, fmt.Errorf("Não foi possível encontrar a palavra no Dicio.")
+	}
+	return syns, nil
+}

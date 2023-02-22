@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/bruceneco/dicio-api/services"
 	"github.com/bruceneco/dicio-api/utils"
 	"github.com/gin-gonic/gin"
@@ -43,4 +44,17 @@ func (wc *WordController) GetMeanings(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"meanings": meanings})
+}
+
+func (wc *WordController) GetSynonyms(c *gin.Context) {
+	word := c.Param("word")
+	syns, err := wc.scrap.Synonyms(word)
+	if err != nil {
+		utils.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	} else if len(syns) == 0 {
+		utils.NewError(c, http.StatusNotFound, fmt.Sprintf("Não há sinônimos para a palavra \"%s\".", word))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"synonyms": syns})
 }
