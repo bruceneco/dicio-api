@@ -24,7 +24,7 @@ func NewScrapService(logger *lib.Logger, scrap *lib.Scrap) *ScrapService {
 	}
 }
 
-func (s ScrapService) TopWords(nWords int) ([]string, error) {
+func (s *ScrapService) TopWords(nWords int) ([]string, error) {
 	c := s.scrap.GetColl()
 	nWords = int(math.Min(float64(nWords), float64(5000)))
 	var words []string
