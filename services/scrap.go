@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+const (
+	dicioURL = "https://www.dicio.com.br"
+)
+
 type ScrapService struct {
 	logger *lib.Logger
 	scrap  *lib.Scrap
@@ -31,7 +35,7 @@ func (s ScrapService) TopWords(nWords int) ([]string, error) {
 		words = append(words, strings.TrimSpace(e.Text))
 	})
 	for i := 0.; i < math.Ceil(float64(nWords)/100.); i++ {
-		err := c.Visit(fmt.Sprintf("https://www.dicio.com.br/palavras-mais-buscadas/%g", i))
+		err := c.Visit(fmt.Sprintf("%s/palavras-mais-buscadas/%g", dicioURL, i))
 		if err != nil {
 			s.logger.Errorf("can't access dicio site: %s", err.Error())
 			return nil, fmt.Errorf("Não foi possível acessar o site do Dicio.")
