@@ -126,3 +126,16 @@ func (wc *WordController) GetCitations(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"citations": citations})
 }
+
+func (wc *WordController) GetFullInfo(c *gin.Context) {
+	word := c.Param("word")
+	wi, err := wc.scrap.FullWordInfo(word)
+	if err != nil {
+		utils.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	} else if wi == nil {
+		utils.NewError(c, http.StatusNotFound, fmt.Sprintf("Não foi possível encontrar a palavra \"%s\".", word))
+		return
+	}
+	c.JSON(http.StatusOK, wi)
+}

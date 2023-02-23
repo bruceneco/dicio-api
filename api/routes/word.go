@@ -24,6 +24,7 @@ func (pr *WordRoutes) Setup() {
 		api.GET("/examples/:word", pr.wordController.GetExamples)
 		api.GET("/citations/:word", pr.wordController.GetCitations)
 		api.GET("/antonyms/:word", pr.wordController.GetAntonyms)
+		api.GET("/info/:word", pr.wordController.GetFullInfo)
 	}
 }
 

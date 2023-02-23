@@ -49,10 +49,9 @@ func (s *ScrapService) TopWords(nWords int) ([]string, error) {
 }
 
 func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
-	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	word, err := s.normalizeWord(word)
 	if err != nil {
-		s.logger.Warnf("can't remove accents from word: %s", err.Error())
-		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+		return nil, err
 	}
 	var meanings []*models.Meaning
 
@@ -88,10 +87,9 @@ func (s *ScrapService) extractMeaningsFromPage(c *colly.Collector, meanings *[]*
 }
 
 func (s *ScrapService) Synonyms(word string) ([]string, error) {
-	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	word, err := s.normalizeWord(word)
 	if err != nil {
-		s.logger.Warnf("can't remove accents from word: %s", err.Error())
-		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+		return nil, err
 	}
 	c := s.scrap.GetColl()
 	syns := []string{}
@@ -146,10 +144,9 @@ func (s *ScrapService) extractEtymologyFromPage(c *colly.Collector, etym *string
 }
 
 func (s *ScrapService) Definition(word string) (*models.Definition, error) {
-	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	word, err := s.normalizeWord(word)
 	if err != nil {
-		s.logger.Warnf("can't remove accents from word: %s", err.Error())
-		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+		return nil, err
 	}
 	c := s.scrap.GetColl()
 	def := models.Definition{}
@@ -182,10 +179,9 @@ func (s *ScrapService) extractDefinitionFromPage(c *colly.Collector, def *models
 }
 
 func (s *ScrapService) Examples(word string) ([]*models.Example, error) {
-	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	word, err := s.normalizeWord(word)
 	if err != nil {
-		s.logger.Warnf("can't remove accents from word: %s", err.Error())
-		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+		return nil, err
 	}
 	c := s.scrap.GetColl()
 	examples := []*models.Example{}
@@ -224,10 +220,9 @@ func (s *ScrapService) extractExamplesFromPage(c *colly.Collector, examples *[]*
 }
 
 func (s *ScrapService) Citations(word string) ([]*models.Citation, error) {
-	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	word, err := s.normalizeWord(word)
 	if err != nil {
-		s.logger.Warnf("can't remove accents from word: %s", err.Error())
-		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+		return nil, err
 	}
 	c := s.scrap.GetColl()
 	citations := []*models.Citation{}
@@ -260,10 +255,9 @@ func (s *ScrapService) extractCitationsFromPage(c *colly.Collector, citations *[
 }
 
 func (s *ScrapService) Antonyms(word string) ([]string, error) {
-	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	word, err := s.normalizeWord(word)
 	if err != nil {
-		s.logger.Warnf("can't remove accents from word: %s", err.Error())
-		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+		return nil, err
 	}
 	c := s.scrap.GetColl()
 	antonyms := []string{}
@@ -275,6 +269,15 @@ func (s *ScrapService) Antonyms(word string) ([]string, error) {
 		return nil, fmt.Errorf("não foi possível encontrar antônimos de %s.", word)
 	}
 	return antonyms, nil
+}
+
+func (s *ScrapService) normalizeWord(word string) (string, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return "", fmt.Errorf("não foi possível remover os acentos da palavra \"%s\" para uma busca precisa", word)
+	}
+	return word, nil
 }
 
 func (s *ScrapService) extractAntonymsFromPage(c *colly.Collector, antonyms *[]string) {
@@ -292,4 +295,29 @@ func (s *ScrapService) extractAntonymsFromPage(c *colly.Collector, antonyms *[]s
 			*antonyms = append(*antonyms, syn)
 		}
 	})
+}
+
+func (s *ScrapService) FullWordInfo(word string) (*models.WordInfo, error) {
+	word, err := s.normalizeWord(word)
+	if err != nil {
+		return nil, err
+	}
+	wi := models.WordInfo{
+		Definition: &models.Definition{},
+	}
+	c := s.scrap.GetColl()
+	s.extractMeaningsFromPage(c, &wi.Meanings)
+	s.extractEtymologyFromPage(c, &wi.Etymology)
+	s.extractDefinitionFromPage(c, wi.Definition)
+	s.extractSynonymsFromPage(c, &wi.Synonyms)
+	s.extractAntonymsFromPage(c, &wi.Antonyms)
+	s.extractCitationsFromPage(c, &wi.Citations)
+	s.extractExamplesFromPage(c, &wi.Examples)
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("could not visit page of word %s: %s", word, err.Error())
+		return nil, fmt.Errorf("não foi possível acessar a página da palavra \"%s\"", word)
+	}
+
+	return &wi, nil
 }

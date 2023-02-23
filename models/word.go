@@ -25,8 +25,11 @@ type Citation struct {
 }
 
 type WordInfo struct {
-	Meaning    `json:"meaning"`
-	Definition `json:"definition"`
-	Example    `json:"example"`
-	Citation   `json:"citation"`
+	Meanings    []*Meaning `json:"meanings,omitempty"`
+	*Definition `json:"definition,omitempty"`
+	Examples    []*Example  `json:"examples,omitempty"`
+	Citations   []*Citation `json:"citations,omitempty"`
+	Antonyms    []string    `json:"antonyms"`
+	Synonyms    []string    `json:"synonyms"`
+	Etymology   string      `json:"etymology"`
 }
