@@ -190,6 +190,17 @@ func (s *ScrapService) Examples(word string) ([]*models.Example, error) {
 	c := s.scrap.GetColl()
 	examples := []*models.Example{}
 
+	s.extractExamplesFromPage(c, &examples)
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("could not find usage examples of \"%s\": %s", word, err.Error())
+		return nil, fmt.Errorf("Não foi possível buscar exemplos de \"%s\".", word)
+	}
+	return examples, nil
+}
+
+func (s *ScrapService) extractExamplesFromPage(c *colly.Collector, examples *[]*models.Example) {
 	c.OnHTML(".frase", func(e *colly.HTMLElement) {
 		re := regexp.MustCompile(`(\d{2}/\d{2}/\d{4})`)
 		txt := e.Text
@@ -208,15 +219,8 @@ func (s *ScrapService) Examples(word string) ([]*models.Example, error) {
 		example.Content = strings.Replace(txt, authorAndDate, "", -1)
 		example.Content = strings.Replace(example.Content, "\n", "", -1)
 		example.Content = strings.TrimSpace(example.Content)
-		examples = append(examples, &example)
+		*examples = append(*examples, &example)
 	})
-
-	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
-	if err != nil {
-		s.logger.Warnf("could not find usage examples of \"%s\": %s", word, err.Error())
-		return nil, fmt.Errorf("Não foi possível buscar exemplos de \"%s\".", word)
-	}
-	return examples, nil
 }
 
 func (s *ScrapService) Citations(word string) ([]*models.Citation, error) {
