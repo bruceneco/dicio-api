@@ -95,6 +95,17 @@ func (s *ScrapService) Synonyms(word string) ([]string, error) {
 	}
 	c := s.scrap.GetColl()
 	syns := []string{}
+	s.extractSynonymsFromPage(c, &syns)
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
+		return nil, fmt.Errorf("não foi possível encontrar sinônimos de %s.", word)
+	}
+	return syns, nil
+}
+
+func (s *ScrapService) extractSynonymsFromPage(c *colly.Collector, syns *[]string) {
 	c.OnHTML(".sinonimos", func(e *colly.HTMLElement) {
 		if !strings.Contains(e.Text, "sinônimo") {
 			return
@@ -106,16 +117,9 @@ func (s *ScrapService) Synonyms(word string) ([]string, error) {
 		for _, syn := range strings.Split(synsSepByComma[1], ", ") {
 			syn := strings.Replace(syn, "\n", "", -1)
 			syn = strings.TrimSpace(syn)
-			syns = append(syns, syn)
+			*syns = append(*syns, syn)
 		}
 	})
-
-	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
-	if err != nil {
-		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
-		return nil, fmt.Errorf("não foi possível encontrar sinônimos de %s.", word)
-	}
-	return syns, nil
 }
 
 func (s *ScrapService) Etymology(word string) (string, error) {
