@@ -153,6 +153,17 @@ func (s *ScrapService) Definition(word string) (*models.Definition, error) {
 	}
 	c := s.scrap.GetColl()
 	def := models.Definition{}
+	s.extractDefinitionFromPage(c, &def)
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		return nil, fmt.Errorf("Não foi possível buscar a definição de %s.", word)
+	}
+
+	return &def, nil
+}
+
+func (s *ScrapService) extractDefinitionFromPage(c *colly.Collector, def *models.Definition) {
 	c.OnHTML(".adicional", func(element *colly.HTMLElement) {
 		txt := element.Text
 		grammClass, err := s.textTransform.GetFromSubstrUntilTheEOL(txt, "Classe gramatical: ")
@@ -168,13 +179,6 @@ func (s *ScrapService) Definition(word string) (*models.Definition, error) {
 			def.Plural = plural
 		}
 	})
-
-	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
-	if err != nil {
-		return nil, fmt.Errorf("Não foi possível buscar a definição de %s.", word)
-	}
-
-	return &def, nil
 }
 
 func (s *ScrapService) Examples(word string) ([]*models.Example, error) {
