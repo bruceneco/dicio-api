@@ -62,6 +62,19 @@ func (wc *WordController) GetSynonyms(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"synonyms": syns})
 }
 
+func (wc *WordController) GetAntonyms(c *gin.Context) {
+	word := c.Param("word")
+	antonyms, err := wc.scrap.Antonyms(word)
+	if err != nil {
+		utils.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	} else if len(antonyms) == 0 {
+		utils.NewError(c, http.StatusNotFound, fmt.Sprintf("Não há antônimos para a palavra \"%s\".", word))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"antonyms": antonyms})
+}
+
 func (wc *WordController) GetEtymology(c *gin.Context) {
 	word := c.Param("word")
 	etym, err := wc.scrap.Etymology(word)

@@ -100,7 +100,7 @@ func (s *ScrapService) Synonyms(word string) ([]string, error) {
 			return
 		}
 		for _, syn := range strings.Split(synsSepByComma[1], ", ") {
-			syn := strings.Replace(syn, "\\n", "", -1)
+			syn := strings.Replace(syn, "\n", "", -1)
 			syn = strings.TrimSpace(syn)
 			syns = append(syns, syn)
 		}
@@ -233,4 +233,35 @@ func (s *ScrapService) Citations(word string) ([]*models.Citation, error) {
 		return nil, fmt.Errorf("Não foi possível buscar citações de \"%s\".", word)
 	}
 	return citations, nil
+}
+
+func (s *ScrapService) Antonyms(word string) ([]string, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+	}
+	c := s.scrap.GetColl()
+	antonyms := []string{}
+	c.OnHTML(".sinonimos", func(e *colly.HTMLElement) {
+		if !strings.Contains(e.Text, "contrário") {
+			return
+		}
+		antonymsSepByComma := strings.Split(e.Text, ":")
+		if len(antonymsSepByComma) < 2 {
+			return
+		}
+		for _, antonym := range strings.Split(antonymsSepByComma[1], ", ") {
+			syn := strings.Replace(antonym, "\n", "", -1)
+			syn = strings.TrimSpace(syn)
+			antonyms = append(antonyms, syn)
+		}
+	})
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
+		return nil, fmt.Errorf("não foi possível encontrar antônimos de %s.", word)
+	}
+	return antonyms, nil
 }
