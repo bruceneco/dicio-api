@@ -84,6 +84,11 @@ func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
 }
 
 func (s *ScrapService) Synonyms(word string) ([]string, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+	}
 	c := s.scrap.GetColl()
 	syns := []string{}
 	c.OnHTML(".sinonimos", func(e *colly.HTMLElement) {
@@ -101,7 +106,7 @@ func (s *ScrapService) Synonyms(word string) ([]string, error) {
 		}
 	})
 
-	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
 	if err != nil {
 		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
 		return nil, fmt.Errorf("não foi possível encontrar sinônimos de %s.", word)
@@ -110,13 +115,18 @@ func (s *ScrapService) Synonyms(word string) ([]string, error) {
 }
 
 func (s *ScrapService) Etymology(word string) (string, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return "", fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+	}
 	c := s.scrap.GetColl()
 	etym := ""
 	c.OnHTML(".significado > .etim", func(element *colly.HTMLElement) {
 		etym = strings.Split(element.Text, "). ")[1]
 	})
 
-	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
 	if err != nil {
 		return "", fmt.Errorf("Não foi possível buscar a etimologia de %s.", word)
 	}
@@ -124,6 +134,11 @@ func (s *ScrapService) Etymology(word string) (string, error) {
 }
 
 func (s *ScrapService) Definition(word string) (*models.Definition, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+	}
 	c := s.scrap.GetColl()
 	def := models.Definition{}
 	c.OnHTML(".adicional", func(element *colly.HTMLElement) {
@@ -142,7 +157,7 @@ func (s *ScrapService) Definition(word string) (*models.Definition, error) {
 		}
 	})
 
-	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
 	if err != nil {
 		return nil, fmt.Errorf("Não foi possível buscar a definição de %s.", word)
 	}
@@ -151,6 +166,11 @@ func (s *ScrapService) Definition(word string) (*models.Definition, error) {
 }
 
 func (s *ScrapService) Examples(word string) ([]*models.Example, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+	}
 	c := s.scrap.GetColl()
 	examples := []*models.Example{}
 
@@ -175,10 +195,42 @@ func (s *ScrapService) Examples(word string) ([]*models.Example, error) {
 		examples = append(examples, &example)
 	})
 
-	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
 	if err != nil {
 		s.logger.Warnf("could not find usage examples of \"%s\": %s", word, err.Error())
 		return nil, fmt.Errorf("Não foi possível buscar exemplos de \"%s\".", word)
 	}
 	return examples, nil
+}
+
+func (s *ScrapService) Citations(word string) ([]*models.Citation, error) {
+	word, err := s.textTransform.RemoveAccents(strings.ToLower(word))
+	if err != nil {
+		s.logger.Warnf("can't remove accents from word: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível remover os acentos da palavra para uma busca precisa.")
+	}
+	c := s.scrap.GetColl()
+	citations := []*models.Citation{}
+
+	c.OnHTML(".frase", func(e *colly.HTMLElement) {
+		re := regexp.MustCompile(`(\d{2}/\d{2}/\d{4})`)
+		txt := e.Text
+		if re.FindString(txt) != "" {
+			return
+		}
+		citation := models.Citation{}
+		rawAuthor := e.ChildText("em")
+		citation.Author = strings.TrimSpace(strings.Replace(rawAuthor, "- ", "", -1))
+		citation.Content = strings.Replace(txt, rawAuthor, "", -1)
+		citation.Content = strings.Replace(citation.Content, "\n", "", -1)
+		citation.Content = strings.TrimSpace(citation.Content)
+		citations = append(citations, &citation)
+	})
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("could not find usage citations of \"%s\": %s", word, err.Error())
+		return nil, fmt.Errorf("Não foi possível buscar citações de \"%s\".", word)
+	}
+	return citations, nil
 }

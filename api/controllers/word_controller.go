@@ -100,3 +100,16 @@ func (wc *WordController) GetExamples(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"examples": exs})
 }
+
+func (wc *WordController) GetCitations(c *gin.Context) {
+	word := c.Param("word")
+	citations, err := wc.scrap.Citations(word)
+	if err != nil {
+		utils.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	} else if len(citations) == 0 {
+		utils.NewError(c, http.StatusNotFound, fmt.Sprintf("Não foi possível encontrar citações utilizando a palavra \"%s\".", word))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"citations": citations})
+}

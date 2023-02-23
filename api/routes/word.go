@@ -22,6 +22,7 @@ func (pr *WordRoutes) Setup() {
 		api.GET("/etymology/:word", pr.wordController.GetEtymology)
 		api.GET("/definition/:word", pr.wordController.GetDefinition)
 		api.GET("/examples/:word", pr.wordController.GetExamples)
+		api.GET("/citations/:word", pr.wordController.GetCitations)
 	}
 }
 

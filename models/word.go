@@ -18,3 +18,8 @@ type Example struct {
 	Author  string    `json:"author,omitempty"`
 	Date    time.Time `json:"date"`
 }
+
+type Citation struct {
+	Content string `json:"content,omitempty"`
+	Author  string `json:"author,omitempty"`
+}
