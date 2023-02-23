@@ -130,15 +130,19 @@ func (s *ScrapService) Etymology(word string) (string, error) {
 	}
 	c := s.scrap.GetColl()
 	etym := ""
-	c.OnHTML(".significado > .etim", func(element *colly.HTMLElement) {
-		etym = strings.Split(element.Text, "). ")[1]
-	})
+	s.extractEtymologyFromPage(c, &etym)
 
 	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
 	if err != nil {
 		return "", fmt.Errorf("Não foi possível buscar a etimologia de %s.", word)
 	}
 	return etym, nil
+}
+
+func (s *ScrapService) extractEtymologyFromPage(c *colly.Collector, etym *string) {
+	c.OnHTML(".significado > .etim", func(element *colly.HTMLElement) {
+		*etym = strings.Split(element.Text, "). ")[1]
+	})
 }
 
 func (s *ScrapService) Definition(word string) (*models.Definition, error) {
