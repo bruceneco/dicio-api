@@ -232,6 +232,17 @@ func (s *ScrapService) Citations(word string) ([]*models.Citation, error) {
 	c := s.scrap.GetColl()
 	citations := []*models.Citation{}
 
+	s.extractCitationsFromPage(c, &citations)
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("could not find usage citations of \"%s\": %s", word, err.Error())
+		return nil, fmt.Errorf("Não foi possível buscar citações de \"%s\".", word)
+	}
+	return citations, nil
+}
+
+func (s *ScrapService) extractCitationsFromPage(c *colly.Collector, citations *[]*models.Citation) {
 	c.OnHTML(".frase", func(e *colly.HTMLElement) {
 		re := regexp.MustCompile(`(\d{2}/\d{2}/\d{4})`)
 		txt := e.Text
@@ -244,15 +255,8 @@ func (s *ScrapService) Citations(word string) ([]*models.Citation, error) {
 		citation.Content = strings.Replace(txt, rawAuthor, "", -1)
 		citation.Content = strings.Replace(citation.Content, "\n", "", -1)
 		citation.Content = strings.TrimSpace(citation.Content)
-		citations = append(citations, &citation)
+		*citations = append(*citations, &citation)
 	})
-
-	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
-	if err != nil {
-		s.logger.Warnf("could not find usage citations of \"%s\": %s", word, err.Error())
-		return nil, fmt.Errorf("Não foi possível buscar citações de \"%s\".", word)
-	}
-	return citations, nil
 }
 
 func (s *ScrapService) Antonyms(word string) ([]string, error) {
