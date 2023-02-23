@@ -57,6 +57,18 @@ func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
 	var meanings []*models.Meaning
 
 	c := s.scrap.GetColl()
+	s.extractMeaningsFromPage(c, &meanings)
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("can't access word meaning page: %s", err.Error())
+		return nil, fmt.Errorf("Não foi possível acessar o significado da palavra desejada no Dicio.")
+	}
+
+	return meanings, nil
+}
+
+func (s *ScrapService) extractMeaningsFromPage(c *colly.Collector, meanings *[]*models.Meaning) {
 	c.OnHTML(".significado > span:not(.cl):not(.etim)", func(element *colly.HTMLElement) {
 		meaning := models.Meaning{}
 		kindMeanSplit := strings.SplitAfter(element.Text, "]")
@@ -71,16 +83,8 @@ func (s *ScrapService) Meanings(word string) ([]*models.Meaning, error) {
 			meaning.Type = "Comum"
 		}
 		meaning.Meaning = strings.TrimSpace(meaning.Meaning)
-		meanings = append(meanings, &meaning)
+		*meanings = append(*meanings, &meaning)
 	})
-
-	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
-	if err != nil {
-		s.logger.Warnf("can't access word meaning page: %s", err.Error())
-		return nil, fmt.Errorf("Não foi possível acessar o significado da palavra desejada no Dicio.")
-	}
-
-	return meanings, nil
 }
 
 func (s *ScrapService) Synonyms(word string) ([]string, error) {
