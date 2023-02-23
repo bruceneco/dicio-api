@@ -23,3 +23,10 @@ type Citation struct {
 	Content string `json:"content,omitempty"`
 	Author  string `json:"author,omitempty"`
 }
+
+type WordInfo struct {
+	Meaning    `json:"meaning"`
+	Definition `json:"definition"`
+	Example    `json:"example"`
+	Citation   `json:"citation"`
+}
