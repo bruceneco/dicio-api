@@ -267,6 +267,17 @@ func (s *ScrapService) Antonyms(word string) ([]string, error) {
 	}
 	c := s.scrap.GetColl()
 	antonyms := []string{}
+	s.extractAntonymsFromPage(c, &antonyms)
+
+	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
+		return nil, fmt.Errorf("não foi possível encontrar antônimos de %s.", word)
+	}
+	return antonyms, nil
+}
+
+func (s *ScrapService) extractAntonymsFromPage(c *colly.Collector, antonyms *[]string) {
 	c.OnHTML(".sinonimos", func(e *colly.HTMLElement) {
 		if !strings.Contains(e.Text, "contrário") {
 			return
@@ -278,14 +289,7 @@ func (s *ScrapService) Antonyms(word string) ([]string, error) {
 		for _, antonym := range strings.Split(antonymsSepByComma[1], ", ") {
 			syn := strings.Replace(antonym, "\n", "", -1)
 			syn = strings.TrimSpace(syn)
-			antonyms = append(antonyms, syn)
+			*antonyms = append(*antonyms, syn)
 		}
 	})
-
-	err = c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
-	if err != nil {
-		s.logger.Warnf("can't open dicio page of word %s: %s", word, err.Error())
-		return nil, fmt.Errorf("não foi possível encontrar antônimos de %s.", word)
-	}
-	return antonyms, nil
 }
