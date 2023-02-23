@@ -6,7 +6,9 @@ import (
 	"github.com/bruceneco/dicio-api/models"
 	"github.com/gocolly/colly"
 	"math"
+	"regexp"
 	"strings"
+	"time"
 )
 
 const (
@@ -146,4 +148,37 @@ func (s *ScrapService) Definition(word string) (*models.Definition, error) {
 	}
 
 	return &def, nil
+}
+
+func (s *ScrapService) Examples(word string) ([]*models.Example, error) {
+	c := s.scrap.GetColl()
+	examples := []*models.Example{}
+
+	c.OnHTML(".frase", func(e *colly.HTMLElement) {
+		re := regexp.MustCompile(`(\d{2}/\d{2}/\d{4})`)
+		txt := e.Text
+		if re.FindString(txt) == "" {
+			return
+		}
+		example := models.Example{}
+		authorAndDate := e.ChildText("em")
+		parts := strings.Split(authorAndDate, ", ")
+		example.Author = strings.Join(parts[:len(parts)-1], ", ")
+		date, err := time.Parse("02/01/2006", parts[len(parts)-1])
+		if err == nil {
+			example.Date = date
+		}
+
+		example.Content = strings.Replace(txt, authorAndDate, "", -1)
+		example.Content = strings.Replace(example.Content, "\n", "", -1)
+		example.Content = strings.TrimSpace(example.Content)
+		examples = append(examples, &example)
+	})
+
+	err := c.Visit(fmt.Sprintf("%s/%s", dicioURL, word))
+	if err != nil {
+		s.logger.Warnf("could not find usage examples of \"%s\": %s", word, err.Error())
+		return nil, fmt.Errorf("Não foi possível buscar exemplos de \"%s\".", word)
+	}
+	return examples, nil
 }

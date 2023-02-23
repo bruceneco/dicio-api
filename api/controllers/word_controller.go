@@ -87,3 +87,16 @@ func (wc *WordController) GetDefinition(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, def)
 }
+
+func (wc *WordController) GetExamples(c *gin.Context) {
+	word := c.Param("word")
+	exs, err := wc.scrap.Examples(word)
+	if err != nil {
+		utils.NewError(c, http.StatusBadRequest, err.Error())
+		return
+	} else if len(exs) == 0 {
+		utils.NewError(c, http.StatusNotFound, fmt.Sprintf("Não foi possível encontrar exemplos utilizando a palavra \"%s\".", word))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"examples": exs})
+}
